@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
-from src.models.post import Comment, CommentIn, UserPost, UserPostIn
+from src.models.post import (
+    Comment,
+    CommentIn,
+    UserPost,
+    UserPostIn,
+    UserPostWithComments,
+)
 
 router = APIRouter()
 
@@ -48,3 +54,12 @@ async def get_comments(post_id: int):
     return [
         comment for comment in comment_table.values() if comment["post_id"] == post_id
     ]
+
+
+@router.get("/post/{post_id}", response_model=UserPostWithComments)
+async def get_post_with_comments(post_id: int):
+    post = find_post(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    # Fetch comments for the post
+    return {"post": post, "comments": await get_comments(post_id)}
